@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Billionaire Brunch
 
-## Getting Started
+Digital headquarters for a private venture collective. The public site publishes only what administrators release. Approved members use the portal. Access is enforced in Postgres with row level security.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Next.js, TypeScript, Tailwind CSS, Supabase Auth, Postgres, and Supabase Storage. Deploy the app on Vercel.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Create a Supabase project.
+2. Copy `.env.example` to `.env.local` and set:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
-## Learn More
+   Do not put the service role key in the Next.js app.
 
-To learn more about Next.js, take a look at the following resources:
+3. Apply the migration in `supabase/migrations` with the Supabase CLI or the SQL editor:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   ```bash
+   supabase db push
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. Optional local catalogue: `supabase db reset` runs `supabase/seed.sql`.
+5. Create your user from **Enter**, then promote that account once:
 
-## Deploy on Vercel
+   ```sql
+   update public.profiles
+   set role = 'admin', membership_status = 'approved'
+   where id = (select id from auth.users where email = 'you@example.com');
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   Roles live on `profiles`. They are never taken from user metadata.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+6. `npm run dev`
+
+The public catalogue is cached. A production build reads Supabase while it prerenders, so the project needs to be reachable from the build environment.
+
+Without Supabase environment variables, the site renders a read-only catalogue so the public pages and portal can be reviewed.
+
+## Access
+
+- Anonymous visitors can read public, approved records and can submit interest, event registration, and the connect form.
+- Approved members can read member-only records, post opportunities, manage their companies, and request introductions.
+- Administrators approve members, companies, opportunities, and event guests, and they control featuring, visibility, partners, sponsors, and insights.
+
+Private opportunities are visible to the creator, company members, and administrators.
+
+## Later modules
+
+Deal rooms, matching, investor portals, CRM, and a fuller sponsorship desk should reference `opportunities`, `events`, and `partners` instead of copying those tables.
