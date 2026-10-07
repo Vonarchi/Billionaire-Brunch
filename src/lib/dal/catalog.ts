@@ -74,7 +74,7 @@ export async function getPublicMembers() {
 export async function getFeaturedMembers() {
   const members = await getPublicMembers();
   const featured = members.filter((member) => member.featured);
-  return (featured.length ? featured : members).slice(0, 5);
+  return (featured.length ? featured : members).slice(0, 6);
 }
 
 export async function getPublicMember(slug: string) {
